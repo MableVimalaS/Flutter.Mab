@@ -2,6 +2,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/constants/rewards_config.dart';
+import '../../../../core/storage/storage_service.dart';
 import '../../data/models/activity_model.dart';
 import '../../data/repositories/activity_repository_impl.dart';
 
@@ -23,14 +25,16 @@ class AddActivity extends ActivityEvent {
     required this.categoryId,
     required this.durationMinutes,
     this.note = '',
+    this.expenseAmount = 0.0,
   });
 
   final String categoryId;
   final int durationMinutes;
   final String note;
+  final double expenseAmount;
 
   @override
-  List<Object?> get props => [categoryId, durationMinutes, note];
+  List<Object?> get props => [categoryId, durationMinutes, note, expenseAmount];
 }
 
 class DeleteActivity extends ActivityEvent {
@@ -89,7 +93,8 @@ class ActivityState extends Equatable {
 // --- BLoC ---
 
 class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
-  ActivityBloc(this._repository) : super(const ActivityState()) {
+  ActivityBloc(this._repository, [this._storage])
+      : super(const ActivityState()) {
     on<LoadActivities>(_onLoad);
     on<AddActivity>(_onAdd);
     on<DeleteActivity>(_onDelete);
@@ -97,6 +102,7 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
   }
 
   final ActivityRepositoryImpl _repository;
+  final StorageService? _storage;
   static const _uuid = Uuid();
 
   Future<void> _onLoad(
@@ -119,9 +125,18 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
       durationMinutes: event.durationMinutes,
       date: state.currentDate,
       note: event.note,
+      expenseAmount: event.expenseAmount,
     );
 
     await _repository.saveActivity(activity);
+
+    // Award time coins
+    final coins =
+        RewardsConfig.calculateCoins(event.categoryId, event.durationMinutes);
+    if (coins > 0 && _storage != null) {
+      await _storage.addCoins(coins);
+    }
+
     add(const LoadActivities());
   }
 

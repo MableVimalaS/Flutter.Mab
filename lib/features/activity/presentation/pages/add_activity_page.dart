@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../time_market/presentation/widgets/trade_card.dart';
+import '../../../time_market/utils/trade_calculator.dart';
 import '../../../time_wallet/presentation/bloc/time_wallet_bloc.dart';
+import '../../data/models/activity_model.dart';
 import '../bloc/activity_bloc.dart';
 
 class AddActivityPage extends StatefulWidget {
@@ -18,10 +21,12 @@ class _AddActivityPageState extends State<AddActivityPage> {
   String? _selectedCategoryId;
   int _durationMinutes = 30;
   final _noteController = TextEditingController();
+  final _expenseController = TextEditingController();
 
   @override
   void dispose() {
     _noteController.dispose();
+    _expenseController.dispose();
     super.dispose();
   }
 
@@ -142,6 +147,25 @@ class _AddActivityPageState extends State<AddActivityPage> {
                 hintText: 'e.g., Deep work on project...',
               ),
             ),
+            const SizedBox(height: 32),
+
+            // --- Expense ---
+            Text(
+              'Money spent (optional)',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _expenseController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                hintText: '0.00',
+                prefixText: '\$ ',
+              ),
+            ),
             const SizedBox(height: 40),
 
             // --- Save Button ---
@@ -207,16 +231,52 @@ class _AddActivityPageState extends State<AddActivityPage> {
   void _save() {
     if (_selectedCategoryId == null) return;
 
+    final expense =
+        double.tryParse(_expenseController.text.trim()) ?? 0.0;
+
     context.read<ActivityBloc>().add(
           AddActivity(
             categoryId: _selectedCategoryId!,
             durationMinutes: _durationMinutes,
             note: _noteController.text.trim(),
+            expenseAmount: expense,
           ),
         );
 
     context.read<TimeWalletBloc>().add(const RefreshTimeWallet());
-    context.showSnack('Activity logged!');
-    context.pop();
+
+    // Build trade result for the card
+    final tradeResult = TradeCalculator.evaluateTrade(
+      ActivityModel(
+        id: '',
+        categoryId: _selectedCategoryId!,
+        durationMinutes: _durationMinutes,
+        date: DateTime.now(),
+        note: _noteController.text.trim(),
+        expenseAmount: expense,
+      ),
+    );
+
+    // Show trade card dialog then pop
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TradeCard(tradeResult: tradeResult),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                context.pop();
+              },
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

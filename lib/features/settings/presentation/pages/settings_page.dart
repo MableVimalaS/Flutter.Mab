@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/storage/storage_service.dart';
 import '../../../activity/presentation/bloc/activity_bloc.dart';
 import '../../../dashboard/presentation/bloc/dashboard_bloc.dart';
+import '../../../life_clock/presentation/bloc/life_clock_bloc.dart';
 import '../../../time_wallet/presentation/bloc/time_wallet_bloc.dart';
 import '../bloc/settings_bloc.dart';
 
@@ -48,6 +50,44 @@ class SettingsPage extends StatelessWidget {
               subtitle: '${state.dailyBudgetHours} hours (awake time)',
               onTap: () =>
                   _showBudgetPicker(context, state.dailyBudgetHours),
+            ),
+            const SizedBox(height: 24),
+
+            // --- Life Clock ---
+            _SectionHeader(title: 'Life Clock'),
+            const SizedBox(height: 12),
+            Builder(
+              builder: (context) {
+                final storage = context.read<StorageService>();
+                final birthYear = storage.birthYear;
+                return _SettingsTile(
+                  icon: Icons.hourglass_full_rounded,
+                  title: 'Birth Year',
+                  subtitle: birthYear != null
+                      ? 'Born in $birthYear'
+                      : 'Not set — tap to configure',
+                  onTap: () => _showBirthYearPicker(context, birthYear),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+
+            // --- Money Budget ---
+            _SectionHeader(title: 'Money Budget'),
+            const SizedBox(height: 12),
+            Builder(
+              builder: (context) {
+                final storage = context.read<StorageService>();
+                final budget = storage.dailyMoneyBudget;
+                return _SettingsTile(
+                  icon: Icons.attach_money_rounded,
+                  title: 'Daily Spending Limit',
+                  subtitle: budget > 0
+                      ? '\$${budget.toStringAsFixed(0)} per day'
+                      : 'Not set — tap to configure',
+                  onTap: () => _showMoneyBudgetPicker(context, budget),
+                );
+              },
             ),
             const SizedBox(height: 24),
 
@@ -196,6 +236,143 @@ class SettingsPage extends StatelessWidget {
                       context
                           .read<SettingsBloc>()
                           .add(ChangeDailyBudget(selected));
+                      Navigator.pop(ctx);
+                    },
+                    child: const Text('Save'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showBirthYearPicker(BuildContext context, int? current) {
+    final currentYear = DateTime.now().year;
+    var selected = current ?? currentYear - 25;
+
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Theme.of(ctx)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Set Birth Year',
+                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$selected',
+                  style: Theme.of(ctx).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(ctx).colorScheme.primary,
+                      ),
+                ),
+                Slider(
+                  value: selected.toDouble(),
+                  min: 1940,
+                  max: currentYear.toDouble(),
+                  divisions: currentYear - 1940,
+                  label: '$selected',
+                  onChanged: (v) =>
+                      setModalState(() => selected = v.round()),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      context
+                          .read<LifeClockBloc>()
+                          .add(SetBirthYear(selected));
+                      Navigator.pop(ctx);
+                    },
+                    child: const Text('Save'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMoneyBudgetPicker(BuildContext context, double current) {
+    var selected = current > 0 ? current : 50.0;
+
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Theme.of(ctx)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Daily Spending Limit',
+                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '\$${selected.toStringAsFixed(0)}',
+                  style: Theme.of(ctx).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(ctx).colorScheme.primary,
+                      ),
+                ),
+                Slider(
+                  value: selected,
+                  min: 0,
+                  max: 500,
+                  divisions: 100,
+                  label: '\$${selected.toStringAsFixed(0)}',
+                  onChanged: (v) =>
+                      setModalState(() => selected = v),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      context
+                          .read<StorageService>()
+                          .setDailyMoneyBudget(selected);
                       Navigator.pop(ctx);
                     },
                     child: const Text('Save'),

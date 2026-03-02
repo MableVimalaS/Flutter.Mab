@@ -68,6 +68,40 @@ class StorageService {
     await _settingsBoxInstance.put('daily_hours_budget', hours);
   }
 
+  // --- Life Clock ---
+
+  int? get birthYear =>
+      _settingsBoxInstance.get('birth_year') as int?;
+
+  Future<void> setBirthYear(int year) async {
+    await _settingsBoxInstance.put('birth_year', year);
+  }
+
+  // --- Time Coins ---
+
+  int get totalCoins =>
+      _settingsBoxInstance.get('total_coins', defaultValue: 0) as int;
+
+  Future<void> setTotalCoins(int coins) async {
+    await _settingsBoxInstance.put('total_coins', coins);
+  }
+
+  Future<void> addCoins(int coins) async {
+    final current = totalCoins;
+    await _settingsBoxInstance.put('total_coins', current + coins);
+  }
+
+  // --- Expense Tracking ---
+
+  double get dailyMoneyBudget =>
+      (_settingsBoxInstance.get('daily_money_budget', defaultValue: 0.0)
+          as num)
+          .toDouble();
+
+  Future<void> setDailyMoneyBudget(double budget) async {
+    await _settingsBoxInstance.put('daily_money_budget', budget);
+  }
+
   Future<void> clearAllData() async {
     await _activitiesBoxInstance.clear();
   }

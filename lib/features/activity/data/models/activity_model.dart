@@ -10,6 +10,7 @@ class ActivityModel extends HiveObject {
     required this.durationMinutes,
     required this.date,
     this.note = '',
+    this.expenseAmount = 0.0,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -31,6 +32,9 @@ class ActivityModel extends HiveObject {
   @HiveField(5)
   final DateTime createdAt;
 
+  @HiveField(6)
+  final double expenseAmount;
+
   Duration get duration => Duration(minutes: durationMinutes);
 
   ActivityModel copyWith({
@@ -39,6 +43,7 @@ class ActivityModel extends HiveObject {
     int? durationMinutes,
     DateTime? date,
     String? note,
+    double? expenseAmount,
   }) {
     return ActivityModel(
       id: id ?? this.id,
@@ -46,6 +51,7 @@ class ActivityModel extends HiveObject {
       durationMinutes: durationMinutes ?? this.durationMinutes,
       date: date ?? this.date,
       note: note ?? this.note,
+      expenseAmount: expenseAmount ?? this.expenseAmount,
       createdAt: createdAt,
     );
   }

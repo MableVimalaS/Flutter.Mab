@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../activity/data/models/activity_model.dart';
 import '../../../activity/data/repositories/activity_repository_impl.dart';
 
 // --- Events ---
@@ -25,6 +26,8 @@ class DashboardState extends Equatable {
     this.streakDays = 0,
     this.todaySpentMinutes = 0,
     this.weekTotalMinutes = 0,
+    this.todayActivities = const [],
+    this.todayCategoryMinutes = const {},
     this.isLoading = true,
   });
 
@@ -33,6 +36,8 @@ class DashboardState extends Equatable {
   final int streakDays;
   final int todaySpentMinutes;
   final int weekTotalMinutes;
+  final List<ActivityModel> todayActivities;
+  final Map<String, int> todayCategoryMinutes;
   final bool isLoading;
 
   DashboardState copyWith({
@@ -41,6 +46,8 @@ class DashboardState extends Equatable {
     int? streakDays,
     int? todaySpentMinutes,
     int? weekTotalMinutes,
+    List<ActivityModel>? todayActivities,
+    Map<String, int>? todayCategoryMinutes,
     bool? isLoading,
   }) {
     return DashboardState(
@@ -50,6 +57,9 @@ class DashboardState extends Equatable {
       streakDays: streakDays ?? this.streakDays,
       todaySpentMinutes: todaySpentMinutes ?? this.todaySpentMinutes,
       weekTotalMinutes: weekTotalMinutes ?? this.weekTotalMinutes,
+      todayActivities: todayActivities ?? this.todayActivities,
+      todayCategoryMinutes:
+          todayCategoryMinutes ?? this.todayCategoryMinutes,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -61,6 +71,8 @@ class DashboardState extends Equatable {
         streakDays,
         todaySpentMinutes,
         weekTotalMinutes,
+        todayActivities,
+        todayCategoryMinutes,
         isLoading,
       ];
 }
@@ -80,12 +92,15 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   ) async {
     emit(state.copyWith(isLoading: true));
 
+    final now = DateTime.now();
     final weeklyTotals = _repository.getWeeklyCategoryTotals();
     final dailyTotals = _repository.getDailyTotalsForWeek();
     final streak = _repository.getStreakDays();
-    final todaySpent = _repository.getTotalMinutesForDate(DateTime.now());
+    final todaySpent = _repository.getTotalMinutesForDate(now);
     final weekTotal =
         weeklyTotals.values.fold<int>(0, (sum, v) => sum + v);
+    final todayActivities = _repository.getActivitiesForDate(now);
+    final todayCategoryMinutes = _repository.getCategoryMinutesForDate(now);
 
     emit(
       state.copyWith(
@@ -94,6 +109,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         streakDays: streak,
         todaySpentMinutes: todaySpent,
         weekTotalMinutes: weekTotal,
+        todayActivities: todayActivities,
+        todayCategoryMinutes: todayCategoryMinutes,
         isLoading: false,
       ),
     );

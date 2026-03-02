@@ -4,8 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/extensions/date_extensions.dart';
+import '../../../../core/storage/storage_service.dart';
 import '../../../../shared/widgets/glass_card.dart';
 import '../../../../shared/widgets/stat_chip.dart';
+import '../../../time_market/presentation/widgets/level_badge.dart';
+import '../../../time_market/presentation/widgets/time_receipt.dart';
+import '../../../time_market/presentation/widgets/trade_suggestion.dart';
+import '../../../time_market/utils/trade_calculator.dart';
 import '../bloc/dashboard_bloc.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -76,7 +81,54 @@ class DashboardPage extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
+
+              // --- Level Badge ---
+              Builder(
+                builder: (context) {
+                  final storage =
+                      context.read<StorageService>();
+                  return LevelBadge(storageService: storage);
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // --- Daily Receipt ---
+              if (state.todayActivities.isNotEmpty) ...[
+                Text(
+                  "Today's Receipt",
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Builder(
+                  builder: (context) {
+                    final storage =
+                        context.read<StorageService>();
+                    return TimeReceipt(
+                      activities: state.todayActivities,
+                      dailyMoneyBudget: storage.dailyMoneyBudget,
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              // --- Trade Suggestions ---
+              if (state.todayCategoryMinutes.isNotEmpty)
+                Builder(
+                  builder: (context) {
+                    final suggestions =
+                        TradeCalculator.generateSuggestions(
+                      state.todayCategoryMinutes,
+                    );
+                    return TradeSuggestionCard(
+                        suggestions: suggestions);
+                  },
+                ),
+              if (state.todayCategoryMinutes.isNotEmpty)
+                const SizedBox(height: 20),
 
               // --- Weekly Bar Chart ---
               Text(

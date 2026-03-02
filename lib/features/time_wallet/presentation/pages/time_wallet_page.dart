@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/extensions/date_extensions.dart';
+import '../../../../core/storage/storage_service.dart';
 import '../../../../shared/widgets/glass_card.dart';
 import '../../../../shared/widgets/stat_chip.dart';
+import '../../../life_clock/presentation/widgets/life_clock_card.dart';
+import '../../../time_market/presentation/widgets/level_badge.dart';
 import '../bloc/time_wallet_bloc.dart';
 import '../widgets/time_countdown_ring.dart';
 import '../widgets/recent_activity_tile.dart';
@@ -43,6 +46,19 @@ class TimeWalletPage extends StatelessWidget {
                   ],
                 ),
                 actions: [
+                  Builder(
+                    builder: (context) {
+                      final storage =
+                          context.read<StorageService>();
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: LevelBadge(
+                          storageService: storage,
+                          compact: true,
+                        ),
+                      );
+                    },
+                  ),
                   if (state.streakDays > 0)
                     Padding(
                       padding: const EdgeInsets.only(right: 16),
@@ -64,9 +80,44 @@ class TimeWalletPage extends StatelessWidget {
                     Center(
                       child: TimeCountdownRing(
                         spent: state.spentMinutes,
-                        total: state.totalBudgetMinutes,
+                        total: state.effectiveBudgetMinutes,
                       ),
                     ),
+
+                    // Expense penalty warning
+                    if (state.isOverBudget) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.error
+                              .withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.error
+                                .withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.warning_amber_rounded,
+                                color: theme.colorScheme.error, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Over budget! \$${state.todayExpense.toStringAsFixed(0)} spent '
+                                '(limit: \$${state.dailyMoneyBudget.toStringAsFixed(0)}). '
+                                '${state.expensePenaltyMinutes}m time penalty.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.error,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
 
                     // --- Quick Stats ---
@@ -99,7 +150,11 @@ class TimeWalletPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 20),
+
+                    // --- Life Clock ---
+                    const LifeClockCard(),
+                    const SizedBox(height: 20),
 
                     // --- Recent Activities ---
                     Row(
