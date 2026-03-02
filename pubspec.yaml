@@ -1,0 +1,59 @@
+name: chronos
+description: "Chronos \u2014 Time is Currency. Track your 24 daily hours like a budget."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_bloc: ^8.1.3
+  bloc: ^8.1.2
+
+  # Routing
+  go_router: ^14.2.0
+
+  # Local storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Charts & visualization
+  fl_chart: ^0.68.0
+
+  # UI & design
+  flutter_animate: ^4.5.0
+  google_fonts: ^6.1.0
+
+  # Utilities
+  equatable: ^2.0.5
+  intl: ^0.19.0
+  path_provider: ^2.1.1
+  shared_preferences: ^2.2.2
+  uuid: ^4.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Testing
+  bloc_test: ^9.1.5
+  mocktail: ^1.0.1
+
+  # Code generation
+  build_runner: ^2.4.7
+  hive_generator: ^2.0.1
+
+  # Linting
+  very_good_analysis: ^5.1.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/
+    - assets/images/
+    - assets/fonts/
