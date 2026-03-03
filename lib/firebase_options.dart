@@ -30,15 +30,17 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // TODO: Replace with actual values from `flutterfire configure`
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR-API-KEY',
-    appId: 'YOUR-APP-ID',
-    messagingSenderId: 'YOUR-SENDER-ID',
+    apiKey: 'AIzaSyD2OB_0hErBs_EeexnmWvKII4_Nt9oN5KQ',
+    appId: '1:526912592162:web:1bfe178662cca9d1132d7b',
+    messagingSenderId: '526912592162',
     projectId: 'chronos-flutt',
     authDomain: 'chronos-flutt.firebaseapp.com',
     storageBucket: 'chronos-flutt.firebasestorage.app',
+    measurementId: 'G-E984JZHQ4K',
   );
+
+  // TODO: Replace with actual values from `flutterfire configure`
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'YOUR-API-KEY',

@@ -32,5 +32,21 @@
         ]
       }
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "chronos-flutt",
+          "configurations": {
+            "web": "1:526912592162:web:1bfe178662cca9d1132d7b"
+          }
+        }
+      }
+    }
   }
 }
