@@ -237,7 +237,7 @@ class _WeeklyBarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final maxVal = data.fold<int>(0, (m, e) => e.value > m ? e.value : m);
-    final maxY = maxVal > 0 ? (maxVal / 60).ceilToDouble() + 1 : 8;
+    final maxY = maxVal > 0 ? (maxVal / 60).ceilToDouble() + 1 : 8.0;
 
     return BarChart(
       BarChartData(

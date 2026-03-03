@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../time_market/presentation/widgets/trade_card.dart';
 import '../../../time_market/utils/trade_calculator.dart';
+import '../../../life_clock/presentation/bloc/life_clock_bloc.dart';
 import '../../../time_wallet/presentation/bloc/time_wallet_bloc.dart';
 import '../../data/models/activity_model.dart';
 import '../bloc/activity_bloc.dart';
@@ -244,6 +245,7 @@ class _AddActivityPageState extends State<AddActivityPage> {
         );
 
     context.read<TimeWalletBloc>().add(const RefreshTimeWallet());
+    context.read<LifeClockBloc>().add(const RefreshLifeAdjustments());
 
     // Build trade result for the card
     final tradeResult = TradeCalculator.evaluateTrade(

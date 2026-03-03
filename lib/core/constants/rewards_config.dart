@@ -4,7 +4,7 @@
 class RewardsConfig {
   RewardsConfig._();
 
-  /// ROI star ratings per category (1-5).
+  /// ROI star ratings per category (0-5).
   static const Map<String, int> roi = {
     'exercise': 5,
     'learning': 5,
@@ -18,6 +18,10 @@ class RewardsConfig {
     'entertainment': 2,
     'scrolling': 1,
     'other': 2,
+    'smoking': 0,
+    'drinking': 0,
+    'junkfood': 0,
+    'oversleeping': 0,
   };
 
   /// What you "buy" when you spend time on each category.
@@ -34,13 +38,18 @@ class RewardsConfig {
     'entertainment': 'Relaxation',
     'scrolling': 'Nothing. Bad trade.',
     'other': 'Varies',
+    'smoking': 'Cancer risk, -11 min of life',
+    'drinking': 'Liver damage, -15 min of life',
+    'junkfood': 'Heart risk, -5 min of life',
+    'oversleeping': 'Reduced lifespan, -8 min of life',
   };
 
   /// Trade quality labels based on ROI.
   static String tradeLabel(int stars) {
     if (stars >= 4) return 'GREAT TRADE';
     if (stars >= 2) return 'OKAY TRADE';
-    return 'BAD TRADE';
+    if (stars >= 1) return 'BAD TRADE';
+    return 'TERRIBLE TRADE';
   }
 
   /// Coins earned per 30 minutes for a given star rating.
@@ -52,8 +61,29 @@ class RewardsConfig {
         _ => 0,
       };
 
+  /// Life penalty minutes per session for bad habits.
+  static const Map<String, int> badHabitPenaltyMinutes = {
+    'smoking': 11,
+    'drinking': 15,
+    'junkfood': 5,
+    'oversleeping': 8,
+  };
+
+  /// Whether a category is a bad habit.
+  static bool isBadHabit(String categoryId) =>
+      badHabitPenaltyMinutes.containsKey(categoryId);
+
+  /// Coin penalty per session for bad habits (negative value).
+  static int badHabitCoinPenalty(String categoryId) =>
+      -(badHabitPenaltyMinutes[categoryId] ?? 0);
+
   /// Calculate total coins for a given category and duration in minutes.
+  /// Bad habits return negative coins: ceil(duration/30) sessions x penalty.
   static int calculateCoins(String categoryId, int durationMinutes) {
+    if (isBadHabit(categoryId)) {
+      final sessions = (durationMinutes / 30).ceil();
+      return sessions * badHabitCoinPenalty(categoryId);
+    }
     final stars = roi[categoryId] ?? 2;
     final rate = coinsPerHalfHour(stars);
     return (rate * durationMinutes / 30).round();
@@ -101,6 +131,25 @@ class RewardsConfig {
 
   /// Average life expectancy used for Life Clock.
   static const int averageLifeExpectancyYears = 78;
+
+  /// Bonus days added to life expectancy per level.
+  static const Map<String, int> levelBonusDays = {
+    'Time Beginner': 0,
+    'Time Saver': 7,
+    'Time Investor': 30,
+    'Time Master': 90,
+    'Time Millionaire': 180,
+  };
+
+  /// Bonus days from coins: every 100 coins = +1 day.
+  static int coinBonusDays(int totalCoins) => totalCoins ~/ 100;
+
+  /// Total life bonus days from level milestone + coin accumulation.
+  static int totalLifeBonusDays(int totalCoins) {
+    final level = getLevel(totalCoins);
+    final fromLevel = levelBonusDays[level.name] ?? 0;
+    return fromLevel + coinBonusDays(totalCoins);
+  }
 }
 
 class Level {

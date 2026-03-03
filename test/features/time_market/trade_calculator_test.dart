@@ -40,6 +40,27 @@ void main() {
       test('unknown category defaults to 2-star', () {
         expect(TradeCalculator.calculateCoins('unknown', 30), 2);
       });
+
+      test('bad habit returns negative coins for smoking', () {
+        // smoking: -11 coins per session, 30 min = 1 session
+        expect(TradeCalculator.calculateCoins('smoking', 30), -11);
+        // 60 min = ceil(60/30) = 2 sessions → -22
+        expect(TradeCalculator.calculateCoins('smoking', 60), -22);
+      });
+
+      test('bad habit returns negative coins for drinking', () {
+        expect(TradeCalculator.calculateCoins('drinking', 30), -15);
+        expect(TradeCalculator.calculateCoins('drinking', 45), -30);
+      });
+
+      test('bad habit returns negative coins for junkfood', () {
+        expect(TradeCalculator.calculateCoins('junkfood', 30), -5);
+      });
+
+      test('bad habit returns negative coins for oversleeping', () {
+        expect(TradeCalculator.calculateCoins('oversleeping', 30), -8);
+        expect(TradeCalculator.calculateCoins('oversleeping', 60), -16);
+      });
     });
 
     group('getROI', () {
@@ -96,6 +117,38 @@ void main() {
         expect(result.formattedDuration, '2h');
       });
 
+      test('returns correct trade result for smoking (bad habit)', () {
+        final activity = ActivityModel(
+          id: 'test',
+          categoryId: 'smoking',
+          durationMinutes: 30,
+          date: DateTime.now(),
+        );
+        final result = TradeCalculator.evaluateTrade(activity);
+
+        expect(result.roi, 0);
+        expect(result.coinsEarned, -11);
+        expect(result.tradeLabel, 'TERRIBLE TRADE');
+        expect(result.isBadHabit, true);
+        expect(result.lifePenaltyMinutes, 11);
+        expect(result.reward, 'Cancer risk, -11 min of life');
+      });
+
+      test('returns correct trade result for drinking (bad habit)', () {
+        final activity = ActivityModel(
+          id: 'test',
+          categoryId: 'drinking',
+          durationMinutes: 60,
+          date: DateTime.now(),
+        );
+        final result = TradeCalculator.evaluateTrade(activity);
+
+        expect(result.roi, 0);
+        expect(result.coinsEarned, -30);
+        expect(result.isBadHabit, true);
+        expect(result.lifePenaltyMinutes, 30); // 2 sessions x 15 min
+      });
+
       test('includes expense amount', () {
         final activity = ActivityModel(
           id: 'test',
@@ -128,6 +181,27 @@ void main() {
 
         expect(suggestions.length, 1);
         expect(suggestions.first.fromCategoryId, 'entertainment');
+      });
+
+      test('warns about bad habits with life penalty', () {
+        final categoryMinutes = {'smoking': 30, 'exercise': 60};
+        final suggestions =
+            TradeCalculator.generateSuggestions(categoryMinutes);
+
+        expect(suggestions.length, 1);
+        expect(suggestions.first.fromCategoryId, 'smoking');
+        expect(suggestions.first.message, contains('min of life'));
+        expect(suggestions.first.message, contains('Smoking'));
+      });
+
+      test('warns about multiple bad habits', () {
+        final categoryMinutes = {'smoking': 30, 'drinking': 60};
+        final suggestions =
+            TradeCalculator.generateSuggestions(categoryMinutes);
+
+        expect(suggestions.length, 2);
+        final ids = suggestions.map((s) => s.fromCategoryId).toSet();
+        expect(ids, containsAll(['smoking', 'drinking']));
       });
 
       test('no suggestions for high-ROI activities', () {
@@ -260,6 +334,56 @@ void main() {
         expect(RewardsConfig.tradeLabel(3), 'OKAY TRADE');
         expect(RewardsConfig.tradeLabel(2), 'OKAY TRADE');
         expect(RewardsConfig.tradeLabel(1), 'BAD TRADE');
+        expect(RewardsConfig.tradeLabel(0), 'TERRIBLE TRADE');
+      });
+    });
+
+    group('isBadHabit', () {
+      test('returns true for bad habit categories', () {
+        expect(RewardsConfig.isBadHabit('smoking'), true);
+        expect(RewardsConfig.isBadHabit('drinking'), true);
+        expect(RewardsConfig.isBadHabit('junkfood'), true);
+        expect(RewardsConfig.isBadHabit('oversleeping'), true);
+      });
+
+      test('returns false for normal categories', () {
+        expect(RewardsConfig.isBadHabit('exercise'), false);
+        expect(RewardsConfig.isBadHabit('work'), false);
+        expect(RewardsConfig.isBadHabit('scrolling'), false);
+      });
+    });
+
+    group('totalLifeBonusDays', () {
+      test('returns 0 for 0 coins (Beginner level)', () {
+        expect(RewardsConfig.totalLifeBonusDays(0), 0);
+      });
+
+      test('returns level bonus + coin bonus at 100 coins (Time Saver)', () {
+        // Level bonus: 7 days, coin bonus: 100/100 = 1 day
+        expect(RewardsConfig.totalLifeBonusDays(100), 8);
+      });
+
+      test('returns level bonus + coin bonus at 500 coins (Time Investor)', () {
+        // Level bonus: 30 days, coin bonus: 500/100 = 5 days
+        expect(RewardsConfig.totalLifeBonusDays(500), 35);
+      });
+
+      test('returns level bonus + coin bonus at 1500 coins (Time Master)', () {
+        // Level bonus: 90 days, coin bonus: 1500/100 = 15 days
+        expect(RewardsConfig.totalLifeBonusDays(1500), 105);
+      });
+
+      test('returns level bonus + coin bonus at 5000 coins (Time Millionaire)', () {
+        // Level bonus: 180 days, coin bonus: 5000/100 = 50 days
+        expect(RewardsConfig.totalLifeBonusDays(5000), 230);
+      });
+
+      test('coinBonusDays scales linearly', () {
+        expect(RewardsConfig.coinBonusDays(0), 0);
+        expect(RewardsConfig.coinBonusDays(99), 0);
+        expect(RewardsConfig.coinBonusDays(100), 1);
+        expect(RewardsConfig.coinBonusDays(250), 2);
+        expect(RewardsConfig.coinBonusDays(1000), 10);
       });
     });
   });

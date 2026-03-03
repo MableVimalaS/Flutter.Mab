@@ -130,11 +130,20 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
 
     await _repository.saveActivity(activity);
 
-    // Award time coins
+    // Award or deduct time coins
     final coins =
         RewardsConfig.calculateCoins(event.categoryId, event.durationMinutes);
-    if (coins > 0 && _storage != null) {
+    if (coins != 0 && _storage != null) {
       await _storage.addCoins(coins);
+    }
+
+    // Accumulate life penalty for bad habits
+    if (RewardsConfig.isBadHabit(event.categoryId) && _storage != null) {
+      final sessions = (event.durationMinutes / 30).ceil();
+      final penaltyPerSession =
+          RewardsConfig.badHabitPenaltyMinutes[event.categoryId] ?? 0;
+      final totalPenalty = sessions * penaltyPerSession;
+      await _storage.addLifePenaltyMinutes(totalPenalty);
     }
 
     add(const LoadActivities());

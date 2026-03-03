@@ -1,4 +1,4 @@
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 
 import '../../features/activity/data/models/activity_model.dart';
 
@@ -88,7 +88,22 @@ class StorageService {
 
   Future<void> addCoins(int coins) async {
     final current = totalCoins;
-    await _settingsBoxInstance.put('total_coins', current + coins);
+    final result = (current + coins).clamp(0, 999999999);
+    await _settingsBoxInstance.put('total_coins', result);
+  }
+
+  // --- Life Penalty ---
+
+  int get lifePenaltyMinutes =>
+      _settingsBoxInstance.get('life_penalty_minutes', defaultValue: 0) as int;
+
+  Future<void> setLifePenaltyMinutes(int minutes) async {
+    await _settingsBoxInstance.put('life_penalty_minutes', minutes);
+  }
+
+  Future<void> addLifePenaltyMinutes(int minutes) async {
+    final current = lifePenaltyMinutes;
+    await _settingsBoxInstance.put('life_penalty_minutes', current + minutes);
   }
 
   // --- Expense Tracking ---

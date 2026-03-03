@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/constants/rewards_config.dart';
 import '../../../../shared/widgets/glass_card.dart';
 import '../bloc/life_clock_bloc.dart';
 import 'arm_clock_painter.dart';
@@ -167,7 +166,7 @@ class _LifeClockOverlayState extends State<LifeClockOverlay>
                             ),
                           ),
                           Text(
-                            'Est. ${state.birthYear! + RewardsConfig.averageLifeExpectancyYears}',
+                            'Est. ${state.birthYear! + (state.adjustedLifeExpectancyDays / 365).round()}',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurface
                                   .withValues(alpha: 0.4),
@@ -226,6 +225,21 @@ class _LifeClockOverlayState extends State<LifeClockOverlay>
                         icon: Icons.timer_rounded,
                         color: ringColor,
                       ),
+                      if (state.lifeBonusDays > 0)
+                        LifeStatRow(
+                          label: 'Bonus from coins',
+                          value: '+${state.lifeBonusDays} days',
+                          icon: Icons.monetization_on_rounded,
+                          color: Colors.amber,
+                        ),
+                      if (state.lifePenaltyMinutes > 0)
+                        LifeStatRow(
+                          label: 'Lost to bad habits',
+                          value:
+                              '\u2212${state.lifePenaltyMinutes} min',
+                          icon: Icons.heart_broken_rounded,
+                          color: Colors.red,
+                        ),
                     ],
                   ),
                 ),

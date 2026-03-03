@@ -122,26 +122,57 @@ class TradeCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Coins earned
+            // Coins earned / lost
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.monetization_on_rounded,
-                    color: Colors.amber, size: 20),
+                Icon(
+                  Icons.monetization_on_rounded,
+                  color: tradeResult.coinsEarned < 0
+                      ? Colors.red
+                      : Colors.amber,
+                  size: 20,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   tradeResult.coinsEarned > 0
                       ? '+${tradeResult.coinsEarned} Time Coins earned'
-                      : 'No coins earned',
+                      : tradeResult.coinsEarned < 0
+                          ? '\u2212${tradeResult.coinsEarned.abs()} Time Coins lost'
+                          : 'No coins earned',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: tradeResult.coinsEarned > 0
                         ? Colors.amber.shade700
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                        : tradeResult.coinsEarned < 0
+                            ? Colors.red
+                            : theme.colorScheme.onSurface
+                                .withValues(alpha: 0.4),
                   ),
                 ),
               ],
             ),
+
+            // Life penalty for bad habits
+            if (tradeResult.isBadHabit && tradeResult.lifePenaltyMinutes > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.heart_broken_rounded,
+                        color: Colors.red, size: 20),
+                    const SizedBox(width: 6),
+                    Text(
+                      '\u2212${tradeResult.lifePenaltyMinutes} min of life lost',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
@@ -151,7 +182,8 @@ class TradeCard extends StatelessWidget {
   Color _glowColor(int roi) {
     if (roi >= 4) return Colors.green;
     if (roi >= 2) return Colors.orange;
-    return Colors.red;
+    if (roi >= 1) return Colors.red;
+    return Colors.red.shade900;
   }
 }
 

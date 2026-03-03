@@ -107,14 +107,16 @@ class TimeReceipt extends StatelessWidget {
                         SizedBox(
                           width: 50,
                           child: Text(
-                            '+$coins',
+                            coins >= 0 ? '+$coins' : '\u2212${coins.abs()}',
                             textAlign: TextAlign.right,
                             style: theme.textTheme.bodySmall?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: coins > 0
                                   ? Colors.amber.shade700
-                                  : theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.3),
+                                  : coins < 0
+                                      ? Colors.red
+                                      : theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.3),
                             ),
                           ),
                         ),
@@ -171,14 +173,19 @@ class TimeReceipt extends StatelessWidget {
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.monetization_on_rounded,
-                            color: Colors.amber, size: 16),
+                        Icon(Icons.monetization_on_rounded,
+                            color: totalCoins < 0 ? Colors.red : Colors.amber,
+                            size: 16),
                         const SizedBox(width: 4),
                         Text(
-                          '+$totalCoins',
+                          totalCoins >= 0
+                              ? '+$totalCoins'
+                              : '\u2212${totalCoins.abs()}',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.amber.shade700,
+                            color: totalCoins < 0
+                                ? Colors.red
+                                : Colors.amber.shade700,
                           ),
                         ),
                       ],

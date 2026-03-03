@@ -26,6 +26,8 @@ class TimeCategory {
     required this.color,
     this.roi = 2,
     this.reward = 'Varies',
+    this.isBadHabit = false,
+    this.lifePenaltyMinutes = 0,
   });
 
   final String id;
@@ -34,6 +36,8 @@ class TimeCategory {
   final Color color;
   final int roi;
   final String reward;
+  final bool isBadHabit;
+  final int lifePenaltyMinutes;
 }
 
 class DefaultCategories {
@@ -135,6 +139,46 @@ class DefaultCategories {
       color: Color(0xFF9E9E9E),
       roi: 2,
       reward: 'Varies',
+    ),
+    TimeCategory(
+      id: 'smoking',
+      name: 'Smoking',
+      icon: Icons.smoking_rooms_rounded,
+      color: Color(0xFFB71C1C),
+      roi: 0,
+      reward: 'Cancer risk, -11 min of life',
+      isBadHabit: true,
+      lifePenaltyMinutes: 11,
+    ),
+    TimeCategory(
+      id: 'drinking',
+      name: 'Drinking',
+      icon: Icons.local_bar_rounded,
+      color: Color(0xFF4A148C),
+      roi: 0,
+      reward: 'Liver damage, -15 min of life',
+      isBadHabit: true,
+      lifePenaltyMinutes: 15,
+    ),
+    TimeCategory(
+      id: 'junkfood',
+      name: 'Junk Food',
+      icon: Icons.fastfood_rounded,
+      color: Color(0xFFE65100),
+      roi: 0,
+      reward: 'Heart risk, -5 min of life',
+      isBadHabit: true,
+      lifePenaltyMinutes: 5,
+    ),
+    TimeCategory(
+      id: 'oversleeping',
+      name: 'Oversleeping',
+      icon: Icons.hotel_rounded,
+      color: Color(0xFF0D47A1),
+      roi: 0,
+      reward: 'Reduced lifespan, -8 min of life',
+      isBadHabit: true,
+      lifePenaltyMinutes: 8,
     ),
   ];
 

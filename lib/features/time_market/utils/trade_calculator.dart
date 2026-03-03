@@ -11,6 +11,8 @@ class TradeResult {
     required this.coinsEarned,
     required this.tradeLabel,
     this.expenseAmount = 0.0,
+    this.isBadHabit = false,
+    this.lifePenaltyMinutes = 0,
   });
 
   final String categoryId;
@@ -20,6 +22,8 @@ class TradeResult {
   final int coinsEarned;
   final String tradeLabel;
   final double expenseAmount;
+  final bool isBadHabit;
+  final int lifePenaltyMinutes;
 
   String get formattedDuration {
     final hours = durationMinutes ~/ 60;
@@ -64,6 +68,15 @@ class TradeCalculator {
     final reward = getReward(activity.categoryId);
     final coins = calculateCoins(activity.categoryId, activity.durationMinutes);
     final label = RewardsConfig.tradeLabel(roi);
+    final badHabit = RewardsConfig.isBadHabit(activity.categoryId);
+
+    int lifePenalty = 0;
+    if (badHabit) {
+      final sessions = (activity.durationMinutes / 30).ceil();
+      final penaltyPerSession =
+          RewardsConfig.badHabitPenaltyMinutes[activity.categoryId] ?? 0;
+      lifePenalty = sessions * penaltyPerSession;
+    }
 
     return TradeResult(
       categoryId: activity.categoryId,
@@ -73,6 +86,8 @@ class TradeCalculator {
       coinsEarned: coins,
       tradeLabel: label,
       expenseAmount: activity.expenseAmount,
+      isBadHabit: badHabit,
+      lifePenaltyMinutes: lifePenalty,
     );
   }
 
@@ -81,8 +96,27 @@ class TradeCalculator {
   ) {
     final suggestions = <TradeSuggestionItem>[];
 
+    // Flag bad habits first with strong warnings
+    for (final entry in categoryMinutes.entries) {
+      if (RewardsConfig.isBadHabit(entry.key)) {
+        final cat = DefaultCategories.getById(entry.key);
+        final penalty =
+            RewardsConfig.badHabitPenaltyMinutes[entry.key] ?? 0;
+        final sessions = (entry.value / 30).ceil();
+        final totalPenalty = sessions * penalty;
+        suggestions.add(TradeSuggestionItem(
+          fromCategoryId: entry.key,
+          toCategoryIds: const ['exercise', 'selfcare'],
+          fromMinutes: entry.value,
+          message:
+              '${cat.name} cost you $totalPenalty min of life! Replace with exercise or self-care',
+        ));
+      }
+    }
+
     // Find low-ROI categories with significant time
     for (final entry in categoryMinutes.entries) {
+      if (RewardsConfig.isBadHabit(entry.key)) continue;
       final roi = getROI(entry.key);
       if (roi <= 1 && entry.value >= 30) {
         final cat = DefaultCategories.getById(entry.key);
