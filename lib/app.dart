@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/router/app_router.dart';
@@ -15,7 +16,13 @@ class ChronosApp extends StatefulWidget {
 }
 
 class _ChronosAppState extends State<ChronosApp> {
-  late final _router = AppRouter.router(context.read<StorageService>());
+  GoRouter? _router;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _router ??= AppRouter.router(context.read<StorageService>());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +42,7 @@ class _ChronosAppState extends State<ChronosApp> {
             ),
           ),
           themeMode: state.themeMode,
-          routerConfig: _router,
+          routerConfig: _router!,
         );
       },
     );
