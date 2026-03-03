@@ -17,7 +17,7 @@ void main() {
     blocTest<LifeClockBloc, LifeClockState>(
       'emits state with no birth year when storage returns null',
       build: () {
-        when(() => mockStorage.birthYear).thenReturn(null);
+        when(() => mockStorage.dateOfBirth).thenReturn(null);
         return LifeClockBloc(mockStorage);
       },
       act: (bloc) => bloc.add(const LoadLifeClock()),
@@ -29,9 +29,11 @@ void main() {
     );
 
     blocTest<LifeClockBloc, LifeClockState>(
-      'emits state with birth year and remaining time when storage has year',
+      'emits state with birth date and remaining time when storage has DOB',
       build: () {
-        when(() => mockStorage.birthYear).thenReturn(1995);
+        when(() => mockStorage.dateOfBirth).thenReturn(DateTime(1995, 6, 15));
+        when(() => mockStorage.totalCoins).thenReturn(0);
+        when(() => mockStorage.lifePenaltyMinutes).thenReturn(0);
         return LifeClockBloc(mockStorage);
       },
       act: (bloc) => bloc.add(const LoadLifeClock()),
@@ -48,9 +50,11 @@ void main() {
     blocTest<LifeClockBloc, LifeClockState>(
       'SetBirthYear saves to storage and starts timer',
       build: () {
-        when(() => mockStorage.birthYear).thenReturn(null);
+        when(() => mockStorage.dateOfBirth).thenReturn(null);
         when(() => mockStorage.setBirthYear(any()))
             .thenAnswer((_) async {});
+        when(() => mockStorage.totalCoins).thenReturn(0);
+        when(() => mockStorage.lifePenaltyMinutes).thenReturn(0);
         return LifeClockBloc(mockStorage);
       },
       act: (bloc) => bloc.add(const SetBirthYear(2000)),
@@ -65,9 +69,33 @@ void main() {
       },
     );
 
+    blocTest<LifeClockBloc, LifeClockState>(
+      'SetBirthDate saves to storage and starts timer',
+      build: () {
+        when(() => mockStorage.dateOfBirth).thenReturn(null);
+        when(() => mockStorage.setDateOfBirth(any()))
+            .thenAnswer((_) async {});
+        when(() => mockStorage.totalCoins).thenReturn(0);
+        when(() => mockStorage.lifePenaltyMinutes).thenReturn(0);
+        return LifeClockBloc(mockStorage);
+      },
+      act: (bloc) => bloc.add(SetBirthDate(DateTime(2000, 3, 15))),
+      expect: () => [
+        isA<LifeClockState>()
+            .having((s) => s.birthYear, 'birthYear', 2000)
+            .having((s) => s.dateOfBirth, 'dateOfBirth', DateTime(2000, 3, 15))
+            .having((s) => s.hasBirthYear, 'hasBirthYear', true)
+            .having((s) => s.isLoading, 'isLoading', false),
+      ],
+      verify: (_) {
+        verify(() => mockStorage.setDateOfBirth(DateTime(2000, 3, 15))).called(1);
+      },
+    );
+
     test('lifeFraction is between 0 and 1 for valid birth year', () {
       final state = LifeClockState(
         birthYear: 1990,
+        dateOfBirth: DateTime(1990),
         totalDuration: const Duration(days: 28470), // ~78 years
         elapsedDuration: const Duration(days: 13000), // ~36 years
       );
@@ -83,6 +111,7 @@ void main() {
     test('remaining time components are computed correctly', () {
       final state = LifeClockState(
         birthYear: 1990,
+        dateOfBirth: DateTime(1990),
         remainingDuration: const Duration(
           days: 365 * 42 + 30 * 5 + 15,
           hours: 8,

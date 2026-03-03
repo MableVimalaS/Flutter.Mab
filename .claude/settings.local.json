@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cmd.exe:*)"
+      "Bash(cmd.exe:*)",
+      "Bash(flutter:*)",
+      "Bash(node:*)",
+      "Bash(firebase projects:list:*)",
+      "Bash(firebase.cmd projects:list:*)",
+      "Bash(npx firebase-tools:*)"
     ]
   }
 }

@@ -1,10 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/storage/storage_service.dart';
+import '../../../../core/sync/firestore_sync_service.dart';
 import '../../../activity/presentation/bloc/activity_bloc.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../dashboard/presentation/bloc/dashboard_bloc.dart';
 import '../../../life_clock/presentation/bloc/life_clock_bloc.dart';
 import '../../../time_wallet/presentation/bloc/time_wallet_bloc.dart';
@@ -27,6 +31,28 @@ class SettingsPage extends StatelessWidget {
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
+            ),
+            const SizedBox(height: 24),
+
+            // --- Account ---
+            _SectionHeader(title: 'Account'),
+            const SizedBox(height: 12),
+            Builder(
+              builder: (context) {
+                final user = FirebaseAuth.instance.currentUser;
+                return _SettingsTile(
+                  icon: Icons.person_outline_rounded,
+                  title: user?.email ?? 'Not signed in',
+                  subtitle: user != null ? 'Signed in' : 'Sign in to sync data',
+                );
+              },
+            ),
+            _SettingsTile(
+              icon: Icons.logout_rounded,
+              title: 'Sign Out',
+              subtitle: 'Sign out and return to login',
+              iconColor: theme.colorScheme.error,
+              onTap: () => _showSignOutDialog(context),
             ),
             const SizedBox(height: 24),
 
@@ -59,14 +85,14 @@ class SettingsPage extends StatelessWidget {
             Builder(
               builder: (context) {
                 final storage = context.read<StorageService>();
-                final birthYear = storage.birthYear;
+                final dob = storage.dateOfBirth;
                 return _SettingsTile(
-                  icon: Icons.hourglass_full_rounded,
-                  title: 'Birth Year',
-                  subtitle: birthYear != null
-                      ? 'Born in $birthYear'
+                  icon: Icons.cake_rounded,
+                  title: 'Date of Birth',
+                  subtitle: dob != null
+                      ? '${dob.day}/${dob.month}/${dob.year}'
                       : 'Not set — tap to configure',
-                  onTap: () => _showBirthYearPicker(context, birthYear),
+                  onTap: () => _showDobPicker(context, dob),
                 );
               },
             ),
@@ -91,9 +117,32 @@ class SettingsPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
+            // --- Help ---
+            _SectionHeader(title: 'Help'),
+            const SizedBox(height: 12),
+            _SettingsTile(
+              icon: Icons.help_outline_rounded,
+              title: 'Help & Guide',
+              subtitle: 'Learn about all features',
+              onTap: () => context.push('/help'),
+            ),
+            _SettingsTile(
+              icon: Icons.replay_rounded,
+              title: 'Replay Tour',
+              subtitle: 'Show the guided tour again',
+              onTap: () => _replayTour(context),
+            ),
+            const SizedBox(height: 24),
+
             // --- Data ---
             _SectionHeader(title: 'Data'),
             const SizedBox(height: 12),
+            _SettingsTile(
+              icon: Icons.cloud_sync_rounded,
+              title: 'Sync Now',
+              subtitle: 'Push local data to cloud',
+              onTap: () => _syncNow(context),
+            ),
             _SettingsTile(
               icon: Icons.delete_outline_rounded,
               title: 'Clear All Data',
@@ -129,6 +178,29 @@ class SettingsPage extends StatelessWidget {
         ThemeMode.dark => 'Dark',
         _ => 'System',
       };
+
+  void _showSignOutDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign Out?'),
+        content: const Text('You can sign back in to restore your data.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<AuthBloc>().add(const AuthSignOutRequested());
+            },
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showThemePicker(BuildContext context, ThemeMode current) {
     showModalBottomSheet<void>(
@@ -249,73 +321,18 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showBirthYearPicker(BuildContext context, int? current) {
-    final currentYear = DateTime.now().year;
-    var selected = current ?? currentYear - 25;
-
-    showModalBottomSheet<void>(
+  void _showDobPicker(BuildContext context, DateTime? current) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(ctx)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Set Birth Year',
-                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$selected',
-                  style: Theme.of(ctx).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(ctx).colorScheme.primary,
-                      ),
-                ),
-                Slider(
-                  value: selected.toDouble(),
-                  min: 1940,
-                  max: currentYear.toDouble(),
-                  divisions: currentYear - 1940,
-                  label: '$selected',
-                  onChanged: (v) =>
-                      setModalState(() => selected = v.round()),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () {
-                      context
-                          .read<LifeClockBloc>()
-                          .add(SetBirthYear(selected));
-                      Navigator.pop(ctx);
-                    },
-                    child: const Text('Save'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      initialDate: current ?? DateTime(now.year - 25),
+      firstDate: DateTime(1920),
+      lastDate: now,
+      helpText: 'Select your date of birth',
     );
+    if (picked != null && context.mounted) {
+      context.read<LifeClockBloc>().add(SetBirthDate(picked));
+    }
   }
 
   void _showMoneyBudgetPicker(BuildContext context, double current) {
@@ -384,6 +401,20 @@ class SettingsPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _replayTour(BuildContext context) {
+    final storage = context.read<StorageService>();
+    storage.resetCoachMarks();
+    context.go('/wallet');
+  }
+
+  void _syncNow(BuildContext context) async {
+    final syncService = context.read<FirestoreSyncService>();
+    await syncService.fullSync();
+    if (context.mounted) {
+      context.showSnack('Data synced successfully');
+    }
   }
 
   void _showClearDialog(BuildContext context) {

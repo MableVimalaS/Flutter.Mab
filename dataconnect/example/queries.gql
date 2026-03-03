@@ -1,0 +1,40 @@
+query ListAllPublicItems @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  # Replace 'YourPublicItems' with the plural name of your public type
+  YourPublicItems {
+    id
+    name
+    description
+  }
+}
+
+query GetMyUserProfile @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users.") {
+  # Replace 'users' with the plural name of your user type
+  # Replace 'uid' with the unique identifier field for your users
+  users(where: {uid: {eq_expr: "auth.uid"}}) {
+    uid
+    username
+    email
+    # Add other user-specific fields you want to retrieve
+  }
+}
+
+mutation CreateNewPost($title: String!, $content: String!) @auth(level: USER) {
+  # Replace 'post_insert' and 'Post' with your actual type for posts
+  # Ensure 'userUid_expr' points to the field in your schema that stores the user's UID
+  post_insert(data: {
+    title: $title,
+    content: $content,
+    userUid_expr: "auth.uid"
+    # Add other required fields for your Post type
+  })
+}
+
+mutation UpdateMyProfile($newUsername: String, $newBio: String) @auth(level: USER) {
+  # Replace 'user_update' and 'User' with your actual type for users
+  # Replace 'uid' with the primary key field for your users
+  user_update(key: {uid: "auth.uid"}, data: {
+    username: $newUsername,
+    bio: $newBio
+    # Add other fields you want to allow users to update on their profile
+  })
+}

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/storage_service.dart';
+import '../../../../core/sync/firestore_sync_service.dart';
 
 // --- Events ---
 
@@ -71,7 +72,8 @@ class SettingsState extends Equatable {
 // --- BLoC ---
 
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
-  SettingsBloc(this._storage) : super(const SettingsState()) {
+  SettingsBloc(this._storage, [this._syncService])
+      : super(const SettingsState()) {
     on<LoadSettings>(_onLoad);
     on<ChangeThemeMode>(_onChangeTheme);
     on<ChangeDailyBudget>(_onChangeBudget);
@@ -79,6 +81,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   final StorageService _storage;
+  final FirestoreSyncService? _syncService;
 
   Future<void> _onLoad(
     LoadSettings event,
@@ -112,6 +115,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     };
     await _storage.setThemeMode(modeString);
     emit(state.copyWith(themeMode: event.mode));
+    await _syncService?.pushSettings();
   }
 
   Future<void> _onChangeBudget(
@@ -120,6 +124,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   ) async {
     await _storage.setDailyHoursBudget(event.hours);
     emit(state.copyWith(dailyBudgetHours: event.hours));
+    await _syncService?.pushSettings();
   }
 
   Future<void> _onClearData(

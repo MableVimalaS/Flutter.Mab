@@ -68,10 +68,28 @@ class StorageService {
     await _settingsBoxInstance.put('daily_hours_budget', hours);
   }
 
-  // --- Life Clock ---
+  // --- Life Clock: Date of Birth ---
 
-  int? get birthYear =>
-      _settingsBoxInstance.get('birth_year') as int?;
+  /// Full date of birth. Falls back to old `birth_year` if available.
+  DateTime? get dateOfBirth {
+    final isoString = _settingsBoxInstance.get('date_of_birth') as String?;
+    if (isoString != null) {
+      return DateTime.tryParse(isoString);
+    }
+    // Migration fallback: old birth_year -> Jan 1 of that year
+    final oldYear = _settingsBoxInstance.get('birth_year') as int?;
+    if (oldYear != null) {
+      return DateTime(oldYear);
+    }
+    return null;
+  }
+
+  Future<void> setDateOfBirth(DateTime dob) async {
+    await _settingsBoxInstance.put('date_of_birth', dob.toIso8601String());
+  }
+
+  /// Legacy getter preserved for backward compatibility.
+  int? get birthYear => dateOfBirth?.year;
 
   Future<void> setBirthYear(int year) async {
     await _settingsBoxInstance.put('birth_year', year);
@@ -115,6 +133,20 @@ class StorageService {
 
   Future<void> setDailyMoneyBudget(double budget) async {
     await _settingsBoxInstance.put('daily_money_budget', budget);
+  }
+
+  // --- Coach Marks ---
+
+  bool get hasShownCoachMarks =>
+      _settingsBoxInstance.get('coach_marks_shown', defaultValue: false)
+          as bool;
+
+  Future<void> setCoachMarksShown() async {
+    await _settingsBoxInstance.put('coach_marks_shown', true);
+  }
+
+  Future<void> resetCoachMarks() async {
+    await _settingsBoxInstance.put('coach_marks_shown', false);
   }
 
   Future<void> clearAllData() async {

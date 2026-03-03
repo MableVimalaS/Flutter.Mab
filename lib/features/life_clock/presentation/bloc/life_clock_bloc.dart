@@ -28,6 +28,15 @@ class SetBirthYear extends LifeClockEvent {
   List<Object?> get props => [year];
 }
 
+class SetBirthDate extends LifeClockEvent {
+  const SetBirthDate(this.dateOfBirth);
+
+  final DateTime dateOfBirth;
+
+  @override
+  List<Object?> get props => [dateOfBirth];
+}
+
 class RefreshLifeAdjustments extends LifeClockEvent {
   const RefreshLifeAdjustments();
 }
@@ -41,6 +50,7 @@ class _Tick extends LifeClockEvent {
 class LifeClockState extends Equatable {
   const LifeClockState({
     this.birthYear,
+    this.dateOfBirth,
     this.remainingDuration = Duration.zero,
     this.elapsedDuration = Duration.zero,
     this.totalDuration = Duration.zero,
@@ -51,6 +61,7 @@ class LifeClockState extends Equatable {
   });
 
   final int? birthYear;
+  final DateTime? dateOfBirth;
   final Duration remainingDuration;
   final Duration elapsedDuration;
   final Duration totalDuration;
@@ -59,7 +70,10 @@ class LifeClockState extends Equatable {
   final int lifePenaltyMinutes;
   final int adjustedLifeExpectancyDays;
 
-  bool get hasBirthYear => birthYear != null;
+  bool get hasBirthYear => dateOfBirth != null || birthYear != null;
+
+  DateTime? get effectiveBirthDate =>
+      dateOfBirth ?? (birthYear != null ? DateTime(birthYear!) : null);
 
   double get lifeFraction {
     if (totalDuration.inSeconds == 0) return 0.0;
@@ -76,6 +90,7 @@ class LifeClockState extends Equatable {
 
   LifeClockState copyWith({
     int? birthYear,
+    DateTime? dateOfBirth,
     Duration? remainingDuration,
     Duration? elapsedDuration,
     Duration? totalDuration,
@@ -86,6 +101,7 @@ class LifeClockState extends Equatable {
   }) {
     return LifeClockState(
       birthYear: birthYear ?? this.birthYear,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       remainingDuration: remainingDuration ?? this.remainingDuration,
       elapsedDuration: elapsedDuration ?? this.elapsedDuration,
       totalDuration: totalDuration ?? this.totalDuration,
@@ -100,6 +116,7 @@ class LifeClockState extends Equatable {
   @override
   List<Object?> get props => [
         birthYear,
+        dateOfBirth,
         remainingDuration,
         elapsedDuration,
         totalDuration,
@@ -124,6 +141,7 @@ class LifeClockBloc extends Bloc<LifeClockEvent, LifeClockState> {
   LifeClockBloc(this._storage) : super(const LifeClockState()) {
     on<LoadLifeClock>(_onLoad);
     on<SetBirthYear>(_onSetBirthYear);
+    on<SetBirthDate>(_onSetBirthDate);
     on<RefreshLifeAdjustments>(_onRefreshAdjustments);
     on<_Tick>(_onTick);
   }
@@ -145,7 +163,7 @@ class LifeClockBloc extends Bloc<LifeClockEvent, LifeClockState> {
     return _LifeAdjustments(bonusDays: bonusDays, penaltyMinutes: penaltyMinutes);
   }
 
-  Duration _calculateAdjustedTotal(int birthYear, _LifeAdjustments adj) {
+  Duration _calculateAdjustedTotal(_LifeAdjustments adj) {
     final baseDays = RewardsConfig.averageLifeExpectancyYears * 365 +
         (RewardsConfig.averageLifeExpectancyYears ~/ 4);
     final totalMinutes =
@@ -153,18 +171,16 @@ class LifeClockBloc extends Bloc<LifeClockEvent, LifeClockState> {
     return Duration(minutes: totalMinutes > 0 ? totalMinutes : 0);
   }
 
-  Duration _calculateRemaining(int birthYear, _LifeAdjustments adj) {
+  Duration _calculateRemaining(DateTime birthDate, _LifeAdjustments adj) {
     final now = DateTime.now();
-    final birthDate = DateTime(birthYear);
     final elapsed = now.difference(birthDate);
-    final total = _calculateAdjustedTotal(birthYear, adj);
+    final total = _calculateAdjustedTotal(adj);
     final remaining = total - elapsed;
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
-  Duration _calculateElapsed(int birthYear) {
+  Duration _calculateElapsed(DateTime birthDate) {
     final now = DateTime.now();
-    final birthDate = DateTime(birthYear);
     return now.difference(birthDate);
   }
 
@@ -176,14 +192,15 @@ class LifeClockBloc extends Bloc<LifeClockEvent, LifeClockState> {
     return totalMinutes > 0 ? totalMinutes ~/ (24 * 60) : 0;
   }
 
-  void _emitClock(int birthYear, Emitter<LifeClockState> emit) {
+  void _emitClock(DateTime birthDate, Emitter<LifeClockState> emit) {
     final adj = _getAdjustments();
-    final remaining = _calculateRemaining(birthYear, adj);
-    final elapsed = _calculateElapsed(birthYear);
-    final total = _calculateAdjustedTotal(birthYear, adj);
+    final remaining = _calculateRemaining(birthDate, adj);
+    final elapsed = _calculateElapsed(birthDate);
+    final total = _calculateAdjustedTotal(adj);
 
     emit(state.copyWith(
-      birthYear: birthYear,
+      birthYear: birthDate.year,
+      dateOfBirth: birthDate,
       remainingDuration: remaining,
       elapsedDuration: elapsed,
       totalDuration: total,
@@ -198,9 +215,9 @@ class LifeClockBloc extends Bloc<LifeClockEvent, LifeClockState> {
     LoadLifeClock event,
     Emitter<LifeClockState> emit,
   ) async {
-    final birthYear = _storage.birthYear;
-    if (birthYear != null) {
-      _emitClock(birthYear, emit);
+    final dob = _storage.dateOfBirth;
+    if (dob != null) {
+      _emitClock(dob, emit);
       _startTimer();
     } else {
       emit(state.copyWith(isLoading: false));
@@ -212,7 +229,16 @@ class LifeClockBloc extends Bloc<LifeClockEvent, LifeClockState> {
     Emitter<LifeClockState> emit,
   ) async {
     await _storage.setBirthYear(event.year);
-    _emitClock(event.year, emit);
+    _emitClock(DateTime(event.year), emit);
+    _startTimer();
+  }
+
+  Future<void> _onSetBirthDate(
+    SetBirthDate event,
+    Emitter<LifeClockState> emit,
+  ) async {
+    await _storage.setDateOfBirth(event.dateOfBirth);
+    _emitClock(event.dateOfBirth, emit);
     _startTimer();
   }
 
@@ -220,13 +246,15 @@ class LifeClockBloc extends Bloc<LifeClockEvent, LifeClockState> {
     RefreshLifeAdjustments event,
     Emitter<LifeClockState> emit,
   ) async {
-    if (state.birthYear == null) return;
-    _emitClock(state.birthYear!, emit);
+    final birthDate = state.effectiveBirthDate;
+    if (birthDate == null) return;
+    _emitClock(birthDate, emit);
   }
 
   void _onTick(_Tick event, Emitter<LifeClockState> emit) {
-    if (state.birthYear == null) return;
-    _emitClock(state.birthYear!, emit);
+    final birthDate = state.effectiveBirthDate;
+    if (birthDate == null) return;
+    _emitClock(birthDate, emit);
   }
 
   @override

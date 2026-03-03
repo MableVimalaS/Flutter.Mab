@@ -3,11 +3,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/router/app_router.dart';
+import 'core/storage/storage_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 
-class ChronosApp extends StatelessWidget {
+class ChronosApp extends StatefulWidget {
   const ChronosApp({super.key});
+
+  @override
+  State<ChronosApp> createState() => _ChronosAppState();
+}
+
+class _ChronosAppState extends State<ChronosApp> {
+  late final _router = AppRouter.router(context.read<StorageService>());
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +35,7 @@ class ChronosApp extends StatelessWidget {
             ),
           ),
           themeMode: state.themeMode,
-          routerConfig: AppRouter.router,
+          routerConfig: _router,
         );
       },
     );

@@ -20,7 +20,7 @@ class LifeClockCard extends StatelessWidget {
           return GlassCard(
             padding: const EdgeInsets.all(20),
             child: InkWell(
-              onTap: () => _showBirthYearPicker(context),
+              onTap: () => _showBirthDatePicker(context),
               borderRadius: BorderRadius.circular(16),
               child: Row(
                 children: [
@@ -49,7 +49,7 @@ class LifeClockCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Set your birth year to see your life countdown',
+                          'Set your date of birth to see your life countdown',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurface
                                 .withValues(alpha: 0.5),
@@ -69,7 +69,7 @@ class LifeClockCard extends StatelessWidget {
           );
         }
 
-        // Has birth year — show compact countdown
+        // Has birth date — show compact countdown
         final ringColor = state.lifeFraction < 0.5
             ? Colors.green
             : state.lifeFraction < 0.75
@@ -169,73 +169,18 @@ class LifeClockCard extends StatelessWidget {
     );
   }
 
-  void _showBirthYearPicker(BuildContext context) {
-    final currentYear = DateTime.now().year;
-    var selectedYear = currentYear - 25;
-
-    showModalBottomSheet<void>(
+  void _showBirthDatePicker(BuildContext context) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(ctx)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Enter Your Birth Year',
-                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$selectedYear',
-                  style: Theme.of(ctx).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(ctx).colorScheme.primary,
-                      ),
-                ),
-                Slider(
-                  value: selectedYear.toDouble(),
-                  min: 1940,
-                  max: currentYear.toDouble(),
-                  divisions: currentYear - 1940,
-                  label: '$selectedYear',
-                  onChanged: (v) =>
-                      setModalState(() => selectedYear = v.round()),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () {
-                      context
-                          .read<LifeClockBloc>()
-                          .add(SetBirthYear(selectedYear));
-                      Navigator.pop(ctx);
-                    },
-                    child: const Text('Set Birth Year'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      initialDate: DateTime(now.year - 25),
+      firstDate: DateTime(1920),
+      lastDate: now,
+      helpText: 'Select your date of birth',
     );
+    if (picked != null && context.mounted) {
+      context.read<LifeClockBloc>().add(SetBirthDate(picked));
+    }
   }
 
   void _showOverlay(BuildContext context) {

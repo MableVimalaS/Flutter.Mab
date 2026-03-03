@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/rewards_config.dart';
 import '../../../../core/storage/storage_service.dart';
+import '../../../../core/sync/firestore_sync_service.dart';
 import '../../data/models/activity_model.dart';
 import '../../data/repositories/activity_repository_impl.dart';
 
@@ -93,7 +94,7 @@ class ActivityState extends Equatable {
 // --- BLoC ---
 
 class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
-  ActivityBloc(this._repository, [this._storage])
+  ActivityBloc(this._repository, [this._storage, this._syncService])
       : super(const ActivityState()) {
     on<LoadActivities>(_onLoad);
     on<AddActivity>(_onAdd);
@@ -103,6 +104,7 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
 
   final ActivityRepositoryImpl _repository;
   final StorageService? _storage;
+  final FirestoreSyncService? _syncService;
   static const _uuid = Uuid();
 
   Future<void> _onLoad(
@@ -146,6 +148,10 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
       await _storage.addLifePenaltyMinutes(totalPenalty);
     }
 
+    // Sync to Firestore
+    await _syncService?.pushActivity(activity);
+    await _syncService?.pushSettings();
+
     add(const LoadActivities());
   }
 
@@ -154,6 +160,10 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
     Emitter<ActivityState> emit,
   ) async {
     await _repository.deleteActivity(event.activityId);
+
+    // Sync deletion to Firestore
+    await _syncService?.deleteActivityRemote(event.activityId);
+
     add(const LoadActivities());
   }
 

@@ -1,0 +1,46 @@
+type User @table {
+  displayName: String!
+  email: String!
+  createdAt: Timestamp!
+  initialLifeClockMinutes: Int!
+  dateOfBirth: Date
+  gender: String
+}
+
+type ActivityType @table {
+  name: String!
+  type: String! # e.g., "Positive", "Negative"
+  defaultImpactMinutes: Int!
+  createdAt: Timestamp!
+  description: String
+  scientificSourceUrl: String
+}
+
+type ActivityLog @table {
+  user: User!
+  activityType: ActivityType!
+  logDate: Date!
+  durationMinutes: Int
+  quantity: Int
+  actualImpactMinutes: Int!
+  createdAt: Timestamp!
+  notes: String
+}
+
+type LifeClockSnapshot @table {
+  user: User!
+  snapshotDate: Timestamp!
+  currentLifeClockMinutes: Int!
+  createdAt: Timestamp!
+}
+
+type Goal @table {
+  user: User!
+  activityType: ActivityType!
+  goalType: String! # e.g., "Daily", "Weekly"
+  targetValue: Int!
+  startDate: Date!
+  createdAt: Timestamp!
+  endDate: Date
+  currentProgressValue: Int
+}
