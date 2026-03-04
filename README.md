@@ -1,6 +1,3 @@
-Here it is **converted into the same GitHub README format you showed earlier** (with centered header, badges, sections, tables). You can **paste this directly into `README.md`**.
-
-```markdown
 <h1 align="center">
   Chronos
 </h1>
@@ -26,8 +23,7 @@ Here it is **converted into the same GitHub README format you showed earlier** (
 
 ## The Concept
 
-**Chronos** is a gamified time-tracking Flutter app inspired by the movie *In Time*.
-
+Chronos is a gamified time-tracking Flutter app inspired by the movie *In Time*.  
 Instead of just tracking tasks, Chronos treats your **24 hours as currency**.
 
 Spend time wisely, earn **Time Coins**, level up, and watch your **Life Clock** change based on your habits.
@@ -38,12 +34,12 @@ Spend time wisely, earn **Time Coins**, level up, and watch your **Life Clock** 
 
 ## ⏱ Time Wallet
 
-Track your daily time usage like a **financial wallet**.
+Track your daily time usage like a financial wallet.
 
-- Daily time budget  
-- Real-time countdown ring  
-- Activity tracking  
-- Time spent vs remaining  
+- Daily time budget
+- Real-time countdown ring
+- Activity tracking
+- Time spent vs remaining
 
 ---
 
@@ -51,35 +47,31 @@ Track your daily time usage like a **financial wallet**.
 
 Good habits earn rewards while bad habits cost you.
 
-| Habit | Coins |
-|------|------|
-Exercise | +10 coins |
-Learning | +10 coins |
-Work | +5 coins |
-Scrolling | 0 coins |
-Smoking | -11 coins |
+Habit | Coins
+--- | ---
+Exercise | +10 coins
+Learning | +10 coins
+Work | +5 coins
+Scrolling | 0 coins
+Smoking | -11 coins
 
-Coins unlock **levels and bonus life days**.
+Coins unlock levels and bonus life days.
 
 ---
 
 ## ❤️ Life Clock
 
-A **real-time countdown of your life**.
+A real-time countdown of your life.
 
 Based on:
 
-- Date of birth  
-- Habit quality  
-- Coins earned  
-- Penalties from bad habits  
+- Date of birth
+- Habit quality
+- Coins earned
+- Penalties from bad habits
 
-```
-
-Remaining Life
+Remaining Life  
 YRS : MOS : DAYS : HRS : MIN : SEC
-
-```
 
 ---
 
@@ -87,10 +79,10 @@ YRS : MOS : DAYS : HRS : MIN : SEC
 
 Visualize how you spend time.
 
-- Weekly activity charts  
-- Category breakdown  
-- Streak tracking  
-- Trade quality analysis  
+- Weekly activity charts
+- Category breakdown
+- Streak tracking
+- Trade quality analysis
 
 ---
 
@@ -98,22 +90,22 @@ Visualize how you spend time.
 
 Chronos works **offline-first** but syncs with the cloud.
 
-- Local storage via **Hive**  
-- Cloud sync with **Firebase Firestore**  
-- Secure authentication via **Firebase Auth**
+- Local storage via Hive
+- Cloud sync with Firebase Firestore
+- Secure authentication via Firebase Auth
 
 ---
 
 ## 📱 Cross Platform
 
-Built with **Flutter**.
+Built with Flutter.
 
 Runs on:
 
-- Android  
-- iOS  
-- Web  
-- Desktop  
+- Android
+- iOS
+- Web
+- Desktop
 
 ---
 
@@ -121,53 +113,49 @@ Runs on:
 
 Chronos follows a **feature-first clean architecture using the BLoC pattern**.
 
-```
-
 lib/
-├── core/
-│    ├── auth
-│    ├── router
-│    ├── storage
-│    ├── sync
-│    └── theme
-│
-├── features/
-│    ├── activity
-│    ├── auth
-│    ├── dashboard
-│    ├── life_clock
-│    ├── onboarding
-│    ├── settings
-│    ├── time_market
-│    └── time_wallet
-│
-└── shared/
-└── widgets
+ ├── core/
+ │    ├── auth
+ │    ├── router
+ │    ├── storage
+ │    ├── sync
+ │    └── theme
+ │
+ ├── features/
+ │    ├── activity
+ │    ├── auth
+ │    ├── dashboard
+ │    ├── life_clock
+ │    ├── onboarding
+ │    ├── settings
+ │    ├── time_market
+ │    └── time_wallet
+ │
+ └── shared/
+      └── widgets
 
-````
+Key principles:
 
-### Key Principles
-
-- Offline-first design  
-- Separation of UI and business logic  
-- Modular feature architecture  
-- Predictable state management  
+- Offline-first design
+- Separation of UI and business logic
+- Modular feature architecture
+- Predictable state management
 
 ---
 
 # 🛠 Tech Stack
 
-| Technology | Purpose |
-|-------------|-------------|
-Flutter | Cross-platform UI framework |
-Dart | Programming language |
-flutter_bloc | State management |
-GoRouter | Navigation & routing |
-Hive | Local database |
-Firebase Auth | Authentication |
-Cloud Firestore | Cloud database |
-fl_chart | Analytics charts |
-Google Fonts | Typography |
+Technology | Purpose
+--- | ---
+Flutter | Cross-platform UI framework
+Dart | Programming language
+flutter_bloc | State management
+GoRouter | Navigation & routing
+Hive | Local database
+Firebase Auth | Authentication
+Cloud Firestore | Cloud database
+fl_chart | Analytics charts
+Google Fonts | Typography
 
 ---
 
@@ -175,46 +163,38 @@ Google Fonts | Typography |
 
 Chronos supports:
 
-- Email & Password  
-- Google Sign-In  
-- Secure session persistence  
+- Email & Password
+- Google Sign-In
+- Secure session persistence
 
 ---
 
 # 📊 Gamification System
 
-## Levels
-
-| Level | Coins | Bonus Life |
-|------|------|------|
-Time Beginner | 0 | 0 days |
-Time Saver | 100 | +7 days |
-Time Investor | 500 | +30 days |
-Time Master | 1500 | +90 days |
-Time Millionaire | 5000 | +180 days |
+Level | Coins | Bonus Life
+--- | --- | ---
+Time Beginner | 0 | 0 days
+Time Saver | 100 | +7 days
+Time Investor | 500 | +30 days
+Time Master | 1500 | +90 days
+Time Millionaire | 5000 | +180 days
 
 ---
 
 # 📦 Installation
 
-## 1️⃣ Clone the repository
+1️⃣ Clone the repository
 
-```bash
-git clone https://github.com/yourusername/chronos.git
+git clone https://github.com/yourusername/chronos.git  
 cd chronos
-````
 
-## 2️⃣ Install dependencies
+2️⃣ Install dependencies
 
-```bash
 flutter pub get
-```
 
-## 3️⃣ Run the app
+3️⃣ Run the app
 
-```bash
 flutter run
-```
 
 ---
 
@@ -222,15 +202,13 @@ flutter run
 
 Create a Firebase project and enable:
 
-* Authentication
-* Firestore
-* Hosting (optional)
+- Authentication
+- Firestore
+- Hosting (optional)
 
 Then run:
 
-```bash
 flutterfire configure
-```
 
 ---
 
@@ -238,25 +216,21 @@ flutterfire configure
 
 Run all tests:
 
-```bash
 flutter test
-```
 
 Coverage:
 
-```bash
 flutter test --coverage
-```
 
 ---
 
 # 📈 Future Improvements
 
-* AI habit recommendations
-* Time trading marketplace
-* Smart productivity insights
-* Wearable integration
-* Calendar sync
+- AI habit recommendations
+- Time trading marketplace
+- Smart productivity insights
+- Wearable integration
+- Calendar sync
 
 ---
 
@@ -289,24 +263,15 @@ MIT License
 
 # ⭐ If you like this project
 
-Give it a **star ⭐ on GitHub**.
+Give it a star ⭐ on GitHub.
 
 ---
 
-<p align="center">
-  👩‍💻 Built with Flutter
-</p>
+👩‍💻 Built with Flutter
 
 Chronos demonstrates:
 
-* Clean Flutter architecture
-* Advanced BLoC usage
-* Offline-first design
-* Gamified productivity systems
-
-```
-
----
-
-If you want, I can also show you **how to make this README look like a top GitHub project** (with **UI screenshots, architecture diagram, and animated preview**) — that’s what makes recruiters actually open the repo.
-```
+- Clean Flutter architecture
+- Advanced BLoC usage
+- Offline-first design
+- Gamified productivity systems
