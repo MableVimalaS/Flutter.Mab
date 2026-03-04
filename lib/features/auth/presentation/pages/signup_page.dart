@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/storage/storage_service.dart';
+import '../../../life_clock/presentation/bloc/life_clock_bloc.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/google_sign_in_button.dart';
 
@@ -19,6 +21,7 @@ class _SignupPageState extends State<SignupPage> {
   final _confirmController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  DateTime? _dateOfBirth;
 
   @override
   void dispose() {
@@ -36,16 +39,45 @@ class _SignupPageState extends State<SignupPage> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: BlocConsumer<AuthBloc, AuthState>(
-              listenWhen: (prev, curr) => curr.error != null && prev.error != curr.error,
-              listener: (context, state) {
-                if (state.error != null) {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(content: Text(state.error!)));
-                }
-              },
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: MultiBlocListener(
+              listeners: [
+                BlocListener<AuthBloc, AuthState>(
+                  listenWhen: (prev, curr) => curr.error != null && prev.error != curr.error,
+                  listener: (context, state) {
+                    if (state.error != null) {
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(SnackBar(content: Text(state.error!)));
+                    }
+                  },
+                ),
+                BlocListener<AuthBloc, AuthState>(
+                  listenWhen: (prev, curr) =>
+                      curr.status == AuthStatus.authenticated &&
+                      prev.status != AuthStatus.authenticated,
+                  listener: (context, state) async {
+                    final storage = context.read<StorageService>();
+                    // Save DOB if picked
+                    if (_dateOfBirth != null) {
+                      await storage.setDateOfBirth(_dateOfBirth!);
+                      if (context.mounted) {
+                        context.read<LifeClockBloc>().add(SetBirthDate(_dateOfBirth!));
+                      }
+                    }
+                    // Mark onboarding complete — no need for onboarding flow
+                    if (!storage.hasCompletedOnboarding) {
+                      await storage.completeOnboarding();
+                    }
+                    if (context.mounted) {
+                      context.go('/wallet');
+                    }
+                  },
+                ),
+              ],
+              child: BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {
                 return Form(
                   key: _formKey,
@@ -152,6 +184,30 @@ class _SignupPageState extends State<SignupPage> {
                         },
                         onFieldSubmitted: (_) => _submit(),
                       ),
+                      const SizedBox(height: 16),
+                      // --- Date of Birth picker ---
+                      GestureDetector(
+                        onTap: () => _pickDob(context),
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'Date of Birth',
+                            prefixIcon: const Icon(Icons.cake_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: Text(
+                            _dateOfBirth != null
+                                ? '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}'
+                                : 'Tap to select',
+                            style: TextStyle(
+                              color: _dateOfBirth != null
+                                  ? null
+                                  : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                            ),
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 24),
                       SizedBox(
                         height: 56,
@@ -213,14 +269,38 @@ class _SignupPageState extends State<SignupPage> {
                 );
               },
             ),
+            ),
+            ),
           ),
         ),
       ),
     );
   }
 
+  Future<void> _pickDob(BuildContext context) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(now.year - 25),
+      firstDate: DateTime(1920),
+      lastDate: now,
+      helpText: 'Select your date of birth',
+    );
+    if (picked != null) {
+      setState(() => _dateOfBirth = picked);
+    }
+  }
+
   void _submit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_dateOfBirth == null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Please select your date of birth')),
+        );
+      return;
+    }
     context.read<AuthBloc>().add(AuthSignUpRequested(
           email: _emailController.text.trim(),
           password: _passwordController.text,

@@ -8,7 +8,9 @@
       "Bash(firebase.cmd projects:list:*)",
       "Bash(npx firebase-tools:*)",
       "Bash(flutter.bat analyze:*)",
-      "Bash(firebase deploy:*)"
+      "Bash(firebase deploy:*)",
+      "Bash(firebase hosting:channel:deploy:*)",
+      "Bash(firebase hosting:sites:create:*)"
     ]
   }
 }

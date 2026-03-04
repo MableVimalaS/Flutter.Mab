@@ -150,6 +150,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         error: _mapAuthError(e.code),
         isSubmitting: false,
       ));
+    } catch (e) {
+      emit(state.copyWith(
+        error: 'Sign up failed: $e',
+        isSubmitting: false,
+      ));
     }
   }
 
@@ -171,6 +176,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } on FirebaseAuthException catch (e) {
       emit(state.copyWith(
         error: _mapAuthError(e.code),
+        isSubmitting: false,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        error: 'Sign in failed: $e',
         isSubmitting: false,
       ));
     }
@@ -197,6 +207,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         error: _mapAuthError(e.code),
         isSubmitting: false,
       ));
+    } catch (e) {
+      emit(state.copyWith(
+        error: 'Google sign in failed: $e',
+        isSubmitting: false,
+      ));
     }
   }
 
@@ -216,6 +231,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(state.copyWith(
         status: AuthStatus.authenticated,
         user: event.user,
+        isSubmitting: false,
       ));
     } else {
       emit(const AuthState(status: AuthStatus.unauthenticated));

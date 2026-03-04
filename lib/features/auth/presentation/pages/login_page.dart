@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/auth/auth_repository.dart';
+import '../../../../core/storage/storage_service.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/google_sign_in_button.dart';
 
@@ -34,16 +35,39 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: BlocConsumer<AuthBloc, AuthState>(
-              listenWhen: (prev, curr) => curr.error != null && prev.error != curr.error,
-              listener: (context, state) {
-                if (state.error != null) {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(content: Text(state.error!)));
-                }
-              },
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: MultiBlocListener(
+              listeners: [
+                BlocListener<AuthBloc, AuthState>(
+                  listenWhen: (prev, curr) => curr.error != null && prev.error != curr.error,
+                  listener: (context, state) {
+                    if (state.error != null) {
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(SnackBar(content: Text(state.error!)));
+                    }
+                  },
+                ),
+                BlocListener<AuthBloc, AuthState>(
+                  listenWhen: (prev, curr) =>
+                      curr.status == AuthStatus.authenticated &&
+                      prev.status != AuthStatus.authenticated,
+                  listener: (context, state) {
+                    // Returning user — skip onboarding & coach marks
+                    final storage = context.read<StorageService>();
+                    if (!storage.hasCompletedOnboarding) {
+                      storage.completeOnboarding();
+                    }
+                    if (!storage.hasShownCoachMarks) {
+                      storage.setCoachMarksShown();
+                    }
+                    context.go('/wallet');
+                  },
+                ),
+              ],
+              child: BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {
                 return Form(
                   key: _formKey,
@@ -188,6 +212,8 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 );
               },
+            ),
+            ),
             ),
           ),
         ),

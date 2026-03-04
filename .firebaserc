@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "chronos-flutt"
-  }
+  },
+  "targets": {
+    "chronos-flutt": {
+      "hosting": {
+        "chronos-currency": [
+          "chronos-currency"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

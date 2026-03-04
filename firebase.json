@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "chronos-currency",
     "public": "build/web",
     "ignore": [
       "firebase.json",
